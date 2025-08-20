@@ -1,0 +1,26 @@
+name: Delete merged branch
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-merged-branch:
+    # Only run if PR was merged (not just closed) and target is main branch
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Delete merged branch
+        # Skip deletion for protected branches (main, develop, master, etc.)
+        if: >
+          !contains(github.event.pull_request.head.ref, 'main') &&
+          !contains(github.event.pull_request.head.ref, 'master') &&
+          !contains(github.event.pull_request.head.ref, 'develop') &&
+          !contains(github.event.pull_request.head.ref, 'release')
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ github.token }}
+          branches: ${{ github.event.pull_request.head.ref }}
+        # Don't fail the workflow if branch deletion fails
+        continue-on-error: true
